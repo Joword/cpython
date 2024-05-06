@@ -411,11 +411,22 @@ def _splitparams(url):
     return url[:i], url[i+1:]
 
 def _splitnetloc(url: str, start=0):
+    """Actually, <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+    e.g., mysql://test123:test#789@127.0.0.1:6313/urlTest?charset=utf8#section1
+    
+    the form of delimiters have the order. if the username or password has '#' or '?'.
+    it brings the exception because the list index, the delim.
+    Only the '/' in front of '?' and '#', it goes well.
+    
+    Here, it is my solution:
+    To handle the '#' or '?' the situation when the '?' index value or the '#' index value is higher than the '/' index value, the three characters, '/?#', follow the default order.
+    Maybe, use quote/quote_plus/unquote to replace that. but it need parse the netloc before, to got the username and password.
+    """
     delim = len(url)   # position of end of domain part of url, default is end
     slashlim, queslim, warnlim = [url.find(c, start) for c in '/?#']
     if slashlim > queslim or slashlim > warnlim:    # support the character '#' or '?' in the username or password within the netloc.
         return url[start:slashlim], url[slashlim:]
-    for c in '/?#':    # look for delimiters; the order is NOT important
+    for c in '/?#':    # look for delimiters; the order is important
         wdelim = url.find(c, start)        # find first of this delim
         if wdelim >= 0:                    # if found
             delim = min(delim, wdelim)     # use earliest delim position
