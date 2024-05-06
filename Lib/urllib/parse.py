@@ -410,8 +410,11 @@ def _splitparams(url):
         i = url.find(';')
     return url[:i], url[i+1:]
 
-def _splitnetloc(url, start=0):
+def _splitnetloc(url: str, start=0):
     delim = len(url)   # position of end of domain part of url, default is end
+    slashlim, queslim, warnlim = [url.find(c, start) for c in '/?#']
+    if slashlim > queslim or slashlim > warnlim:    # support the character '#' or '?' in the username or password within the netloc.
+        return url[start:slashlim], url[slashlim:]
     for c in '/?#':    # look for delimiters; the order is NOT important
         wdelim = url.find(c, start)        # find first of this delim
         if wdelim >= 0:                    # if found
